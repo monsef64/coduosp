@@ -14,6 +14,9 @@
 #include "game_globals.h"
 #include "game_functions.h"
 #include "scr_vm.h"
+#if defined(CODUO_SP)
+#include "single_player_mode.h"
+#endif
 
 #define CLIENT_ARCHIVE_NONE -1
 /* GENTITY_OFFSET_* replaced by struct field access:
@@ -159,6 +162,13 @@ void ClientBegin(int clientNum)
         CON_CONNECTED;
     CalculateRanks();
     Scr_Notify(&g_entities[clientNum], scr_const_begin, 0);
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: the single-player game has no gametype
+     * scripts to call spawn(); place the local player at a map spawn point
+     * like the retail single-player engine does. A later script spawn()
+     * remains authoritative and simply repositions the player. */
+    coduosp_client_begin(&g_entities[clientNum]);
+#endif
 }
 
 /* VERIFIED_DECOMPILER(0x44df4, 54df4_ClientSpawn.c, VERIFY-WORKER-CLIENT-LIFECYCLE-2026-06-17): DATAFLOW_VERIFIED - turret/vehicle unlink gates, entity reset, session copy/restore, client memset and preserved health/flags, usercmd, viewheight/speed constants, origin/view angle setup, inactivity timers, and end-frame/think/state calls checked. */

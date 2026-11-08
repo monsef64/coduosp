@@ -19,6 +19,14 @@ void UI_GetGameTypesList(void)
     int32_t fileCount;
     int32_t fileIndex;
 
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: the single-player game has no gametype
+     * scripts; the recovered list loader treats an empty list as fatal, so
+     * the single-player build keeps empty lists without scanning. */
+    ui_gameTypeCount = 0;
+    ui_joinGameTypeCount = 0;
+    return;
+#endif
     ui_gameTypeCount = 0;
     ui_joinGameTypeCount = 0;
     ui_joinGameTypes[0].gameType = String_Alloc("All");

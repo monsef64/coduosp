@@ -7,6 +7,20 @@ include build-mk/sources/client-engine.mk
 PKG_CONFIG ?= pkg-config
 CODUOMP_RENDERER_GPU_PROFILE ?= 0
 
+# NOT_FROM_ORIGINAL_SOURCE: CODUO_SP=1 selects the single-player product
+# flavor (see src/qcommon/coduo_product_flavor.h) for the engine and cgame
+# module built from this file. The default keeps the recovered multiplayer
+# flavor.
+CODUO_SP ?= 0
+ifeq ($(filter $(CODUO_SP),0 1),)
+$(error CODUO_SP must be 1 or 0)
+endif
+ifeq ($(CODUO_SP),1)
+CODUO_SP_CPPFLAGS := -DCODUO_SP
+else
+CODUO_SP_CPPFLAGS :=
+endif
+
 ifeq ($(filter $(CODUOMP_RENDERER_GPU_PROFILE),0 1),)
 $(error CODUOMP_RENDERER_GPU_PROFILE must be 1 or 0)
 endif
@@ -299,6 +313,7 @@ CODUOMP_NATIVE_CFLAGS := -g -O0 $(CODUOMP_INTEGER_FLAGS) \
 	$(CODUOMP_FLOAT_FLAGS) $(CODUOMP_STORAGE_FLAGS) \
 	$(CLIENT_WARNING_FLAGS) \
 	$(RECOVERY_POLICY_CPPFLAGS) \
+	$(CODUO_SP_CPPFLAGS) \
 	$(AUDIO_BACKEND_CPPFLAGS) \
 	$(CODUOMP_RENDERER_GPU_PROFILE_CPPFLAGS) \
 	$(CODUOMP_INCLUDE_FLAGS) \
@@ -345,15 +360,15 @@ endif
 CLIENT_NATIVE_FLOAT_FLAGS := -ffp-contract=off
 client-native-link:
 	@mkdir -p $(dir $(CLIENT_NATIVE_LIBRARY))
-	$(CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CLIENT_WARNING_FLAGS) $(CLIENT_C_TYPE_ERRORS) -g -O0 $(CLIENT_NATIVE_FLOAT_FLAGS) -fno-common -fPIC -fvisibility=hidden $(CLIENT_INCLUDE_FLAGS) $(CLIENT_ALL_C_SOURCES) $(CLIENT_NATIVE_LDFLAGS) -lm -o $(CLIENT_NATIVE_LIBRARY)
+	$(CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CODUO_SP_CPPFLAGS) $(CLIENT_WARNING_FLAGS) $(CLIENT_C_TYPE_ERRORS) -g -O0 $(CLIENT_NATIVE_FLOAT_FLAGS) -fno-common -fPIC -fvisibility=hidden $(CLIENT_INCLUDE_FLAGS) $(CLIENT_ALL_C_SOURCES) $(CLIENT_NATIVE_LDFLAGS) -lm -o $(CLIENT_NATIVE_LIBRARY)
 
 client-windows-cross-link:
 	@mkdir -p $(dir $(CLIENT_WINDOWS_LIBRARY))
-	$(CLIENT_WINDOWS_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CLIENT_WARNING_FLAGS) $(CLIENT_C_TYPE_ERRORS) $(CLIENT_INCLUDE_FLAGS) $(CLIENT_ALL_C_SOURCES) -shared -static-libgcc $(CLIENT_WINDOWS_DEF) -Wl,--no-undefined -lm -o $(CLIENT_WINDOWS_LIBRARY)
+	$(CLIENT_WINDOWS_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CODUO_SP_CPPFLAGS) $(CLIENT_WARNING_FLAGS) $(CLIENT_C_TYPE_ERRORS) $(CLIENT_INCLUDE_FLAGS) $(CLIENT_ALL_C_SOURCES) -shared -static-libgcc $(CLIENT_WINDOWS_DEF) -Wl,--no-undefined -lm -o $(CLIENT_WINDOWS_LIBRARY)
 
 client-win32-abi-link:
 	@mkdir -p $(dir $(CLIENT_WIN32_LIBRARY))
-	$(CLIENT_WIN32_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CLIENT_WARNING_FLAGS) $(CLIENT_C_TYPE_ERRORS) $(CLIENT_INCLUDE_FLAGS) $(CLIENT_ALL_C_SOURCES) -shared -static-libgcc $(CLIENT_WINDOWS_DEF) -Wl,--no-undefined -lm -o $(CLIENT_WIN32_LIBRARY)
+	$(CLIENT_WIN32_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CODUO_SP_CPPFLAGS) $(CLIENT_WARNING_FLAGS) $(CLIENT_C_TYPE_ERRORS) $(CLIENT_INCLUDE_FLAGS) $(CLIENT_ALL_C_SOURCES) -shared -static-libgcc $(CLIENT_WINDOWS_DEF) -Wl,--no-undefined -lm -o $(CLIENT_WIN32_LIBRARY)
 
 # Compiler-policy changes in these files must invalidate existing native
 # objects.  Dependency files cover source/header changes but do not record the

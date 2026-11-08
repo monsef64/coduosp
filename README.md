@@ -5,7 +5,7 @@
 <h1 align="center">Open CoD:UO</h1>
 
 <p align="center">
-  Reconstructed source for the <em>Call of Duty: United Offensive</em> multiplayer client and dedicated-server components.
+  Reconstructed source for the <em>Call of Duty: United Offensive</em> multiplayer and single-player clients and dedicated-server components.
 </p>
 
 This repository contains source and public build dependencies only. It does
@@ -112,6 +112,13 @@ make client-linux64-package
 make server64
 ```
 
+To build the single-player client archive (see the single-player section
+below):
+
+```sh
+make client-linux64-sp-package
+```
+
 ### Debian or Ubuntu Linux (32-bit on an x86-64 host)
 
 Enable i386 packages and install the complete 32-bit toolchain and dependency
@@ -132,6 +139,8 @@ Build the 32-bit client archive or dedicated server:
 make client-linux32-package
 make server32
 ```
+
+The 32-bit single-player client archive is `make client-linux32-sp-package`.
 
 ### Selecting Linux compilers
 
@@ -325,6 +334,55 @@ See [client build notes](docs/client-building.md),
 [server build notes](docs/server-building.md), and
 [the project boundary](docs/project-boundary.md) for platform details and
 repository scope.
+
+## Single-player client (CoDUOSP)
+
+The single-player product is built from the same sources with the `CODUO_SP`
+product flavor. It follows the retail distribution naming: the engine builds
+as `CoDUOSP`, and the modules use the retail single-player stems
+(`uo_gamex86.dll`/`uo_cgamex86.dll`/`uo_uix86.dll` on Windows, `uo_gamex86_64.so`
+style names natively). Config, map, and menu file paths follow the retail
+single-player conventions (`default.cfg`, `uoconfig.cfg`, `maps/<name>.bsp`,
+`ui/menus.txt`).
+
+Build and package targets (Linux):
+
+```sh
+make client-linux64-sp-package   # x86-64 tarball (opencoduo-sp-linux-x86_64-*.tar.gz)
+make client-linux32-sp-package   # i686 tarball
+```
+
+Build-only targets also exist for the native host (`make client-sp`) and for
+Windows (`make client-windows-sp-i686`, `make client-windows-sp-x86_64`).
+Install an archive the same way as the multiplayer one: copy its contents into
+the root of an existing *Call of Duty: United Offensive* installation and keep
+the `uo/` directory layout. Start it with `CoDUOSP` from that directory.
+
+The multiplayer client's main-menu **Single Player** entry launches the
+sibling `CoDUOSP` executable (the same launcher behavior as the retail
+multiplayer menu), and the engine exposes that launcher as the `coduosplaunch`
+command.
+
+### Single-player limitations
+
+Single-player support is reconstructed from source analysis of this code base;
+no original single-player source was used. Code-side play is supported: spawn
+placement (including checkpoints and team starts), the death/respawn flow, and
+free-play `map <name>` loading of single-player maps. The retail campaign
+experience is **not** fully reconstructed: campaign artificial intelligence,
+the single-player script builtins, and savegames are not implemented, so
+retail campaign maps can stop when their level scripts call an unimplemented
+builtin. Those pieces are future work.
+
+## Continuous integration
+
+`.github/workflows/linux.yml` builds on GitHub-hosted Ubuntu runners: a source
+policy job (`make policy-check`), then x86-64 and i686 jobs that build and
+upload the multiplayer and single-player client packages
+(`client-linux64-package`, `client-linux64-sp-package`,
+`client-linux32-package`, `client-linux32-sp-package`) and the matching
+dedicated servers (`make server64`, `make server32`). Packages appear as the
+`opencoduo-linux-*` and `opencoduo-sp-linux-*` workflow artifacts.
 
 ## Server configuration
 

@@ -8,6 +8,7 @@
 #include "../system_input.h"
 #include "../renderer/platform_gamma.h"
 #include "qcommon/q_memory.h"
+#include "qcommon/coduo_product_flavor.h"
 #include "client/common/client_video_settings.h"
 
 #include <SDL.h>
@@ -150,7 +151,7 @@ qboolean CoduoSDL_CreateOpenGLWindow(int32_t width, int32_t height,
                                      int32_t displayIndex,
                                      int32_t refreshRate)
 {
-    const char *windowTitle = "Call of Duty: United Offensive Multiplayer";
+    const char *windowTitle = CODUO_PRODUCT_WINDOW_TITLE;
     uint32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
     qboolean allowHighDpi = qtrue;
     SDL_DisplayMode exclusiveMode = {0};

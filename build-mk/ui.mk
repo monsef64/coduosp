@@ -9,6 +9,17 @@ WIDTH_CC ?= clang
 WINDOWS_CC ?= x86_64-w64-mingw32-gcc
 WIN32_CC ?= i686-w64-mingw32-gcc
 RECOVERY_POLICY_CPPFLAGS :=
+# NOT_FROM_ORIGINAL_SOURCE: CODUO_SP=1 selects the single-player product
+# flavor (see src/qcommon/coduo_product_flavor.h) for this UI-module build.
+CODUO_SP ?= 0
+ifeq ($(filter $(CODUO_SP),0 1),)
+$(error CODUO_SP must be 1 or 0)
+endif
+ifeq ($(CODUO_SP),1)
+CODUO_SP_CPPFLAGS := -DCODUO_SP
+else
+CODUO_SP_CPPFLAGS :=
+endif
 WINDOWS_DEF := build-mk/abi/ui/uo_ui_mp_x86.def
 WINDOWS_LIBRARY ?= .workbench/build/ui/windows-x86_64/uo_ui_mp_x86.dll
 WIN32_LIBRARY ?= .workbench/build/ui/windows-i686/uo_ui_mp_x86.dll
@@ -178,12 +189,12 @@ UI_NATIVE_STORAGE_FLAGS := -fno-common
 
 native-link:
 	mkdir -p $(dir $(NATIVE_LIBRARY))
-	$(CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) -Wall -Wextra -Werror -g -O0 -fPIC \
+	$(CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CODUO_SP_CPPFLAGS) -Wall -Wextra -Werror -g -O0 -fPIC \
 		$(UI_INTEGER_FLAGS) $(UI_NATIVE_STORAGE_FLAGS) -fvisibility=hidden $(INCLUDE_FLAGS) $(ALL_C_SOURCES) $(NATIVE_LDFLAGS) -lm \
 		-o $(NATIVE_LIBRARY)
 
 syntax-check:
-	$(WIDTH_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) -fsyntax-only $(UI_INTEGER_FLAGS) -Wall -Wextra -Werror \
+	$(WIDTH_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CODUO_SP_CPPFLAGS) -fsyntax-only $(UI_INTEGER_FLAGS) -Wall -Wextra -Werror \
 		-Werror=implicit-function-declaration -Werror=incompatible-pointer-types \
 		-Werror=int-conversion -Werror=shorten-64-to-32 \
 		-Werror=pointer-to-int-cast -Werror=int-to-pointer-cast \
@@ -191,19 +202,19 @@ syntax-check:
 
 windows-cross-link:
 	@mkdir -p $(dir $(WINDOWS_LIBRARY))
-	$(WINDOWS_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(UI_INTEGER_FLAGS) -Wall -Wextra -Werror $(INCLUDE_FLAGS) $(ALL_C_SOURCES) \
+	$(WINDOWS_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CODUO_SP_CPPFLAGS) $(UI_INTEGER_FLAGS) -Wall -Wextra -Werror $(INCLUDE_FLAGS) $(ALL_C_SOURCES) \
 		-shared -static-libgcc $(WINDOWS_DEF) -Wl,--no-undefined -luser32 -lgdi32 -lm \
 		-o $(WINDOWS_LIBRARY)
 
 win32-abi-link:
 	@mkdir -p $(dir $(WIN32_LIBRARY))
-	$(WIN32_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(UI_INTEGER_FLAGS) -Wall -Wextra -Werror $(INCLUDE_FLAGS) $(ALL_C_SOURCES) \
+	$(WIN32_CC) -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CODUO_SP_CPPFLAGS) $(UI_INTEGER_FLAGS) -Wall -Wextra -Werror $(INCLUDE_FLAGS) $(ALL_C_SOURCES) \
 		-shared -static-libgcc $(WINDOWS_DEF) -Wl,--no-undefined -luser32 -lgdi32 -lm \
 		-o $(WIN32_LIBRARY)
 
 linux-i386-link:
 	@mkdir -p $(dir $(LINUX_I386_LIBRARY))
-	$(CC) -m32 -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(UI_INTEGER_FLAGS) -Wall -Wextra -Werror \
+	$(CC) -m32 -std=c11 $(RECOVERY_POLICY_CPPFLAGS) $(CODUO_SP_CPPFLAGS) $(UI_INTEGER_FLAGS) -Wall -Wextra -Werror \
 		-g -O0 -fPIC -fvisibility=hidden \
 		$(INCLUDE_FLAGS) $(ALL_C_SOURCES) -shared -Wl,--no-undefined -lm \
 		-o $(LINUX_I386_LIBRARY)

@@ -4,6 +4,11 @@
 
 This is a feature-oriented summary of lasting, user-visible differences from the stock Call of Duty: United Offensive 1.51 multiplayer client and dedicated server. Silent security hardening, source-recovery work, build plumbing, and fixes that only restore stock behavior are intentionally omitted.
 
+### Single player
+
+- The project now also builds a single-player client, `CoDUOSP`, with the retail single-player naming for its modules and configuration files. Linux packages are `make client-linux64-sp-package` and `make client-linux32-sp-package`; the multiplayer client's main-menu **Single Player** entry launches the sibling `CoDUOSP` executable (also available as the `coduosplaunch` command).
+- Single-player play is code-side only: spawn placement (initial spawns, checkpoints, team starts), the death/respawn flow, and free-play `map <name>` loading work. The retail campaign artificial intelligence, single-player script builtins, and savegames are not reconstructed, so retail campaign maps can stop when their level scripts call an unimplemented builtin.
+
 ### Client
 
 - Suppresses duplicate local-player firing effects caused by prediction replay, including recoil, muzzle flashes, shot sounds and brass; the same filter covers replayed reload and rechamber sounds.

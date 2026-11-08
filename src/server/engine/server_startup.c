@@ -1,6 +1,7 @@
 #include "server_startup.h"
 
 #include "collision/collision_map_load.h"
+#include "qcommon/coduo_product_flavor.h"
 #include "qcommon/com_parse.h"
 #include "filesystem/filesystem.h"
 #include "qcommon/game_module_abi_types.h"
@@ -423,9 +424,11 @@ void SV_SpawnServer(const char *serverName)
     svs.snapFlagServerBit ^= SERVER_SNAPSHOT_RESTART_FLAG;
 
     Cvar_Set("nextmap", "map_restart");
-    SV_SetExpectedHunkUsage(va("maps/mp/%s.bsp", serverName));
+    SV_SetExpectedHunkUsage(
+        va(CODUO_PRODUCT_MAP_BSP_PATH_FORMAT, serverName));
     Cvar_Set("cl_paused", "0");
-    CM_LoadMap(va("maps/mp/%s.bsp", serverName), qfalse, &mapChecksum);
+    CM_LoadMap(va(CODUO_PRODUCT_MAP_BSP_PATH_FORMAT, serverName), qfalse,
+               &mapChecksum);
     Cvar_Set("mapname", serverName);
 
     /* Both retail bodies add through AL and then zero-extend it, so the
@@ -439,8 +442,9 @@ void SV_SpawnServer(const char *serverName)
     sv.state = SS_LOADING;
     Cvar_Set("sv_serverRestarting", "1");
 
-    Com_LoadSoundAliases(va("maps/mp/%s.bsp", serverName),
-                         SND_ALIAS_BANK_GAME);
+    Com_LoadSoundAliases(
+        va(CODUO_PRODUCT_MAP_BSP_PATH_FORMAT, serverName),
+        SND_ALIAS_BANK_GAME);
     XAnimSetUser(XANIM_USER_SERVER);
     SV_InitGameProgs(restarting);
 

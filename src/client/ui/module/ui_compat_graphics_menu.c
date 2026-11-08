@@ -914,11 +914,14 @@ void ui_compat_brand_main_menu_version(void)
     }
 }
 
-/* NOT_FROM_ORIGINAL_SOURCE: removes the retail Single Player launcher from
- * the normal recovered client's parsed main menu. The replacement client has
- * no single-player executable to launch, and the proprietary menu asset stays
- * unchanged. */
-void ui_compat_remove_single_player_menu_item(void)
+/* NOT_FROM_ORIGINAL_SOURCE: the retail main menu keeps a Single Player entry
+ * that launched the retail single-player executable. The replacement client
+ * now ships its own CoDUOSP single-player client, so the multiplayer build
+ * wires that entry to the coduosplaunch engine command instead of removing
+ * it. The single-player build loads the single-player menu set; when unified
+ * menu data falls back to the multiplayer set, the redundant launcher entry
+ * is removed there. The proprietary menu asset stays unchanged. */
+void ui_compat_wire_single_player_menu_item(void)
 {
     menuDef_t *const menu = Menus_FindByName("main");
     float vacatedRowY = 0.0f;
@@ -935,6 +938,7 @@ void ui_compat_remove_single_player_menu_item(void)
             continue;
         }
 
+#if defined(CODUO_SP)
         vacatedRowY = item->window.rectClient.y;
         for (int32_t next = index + 1; next < menu->itemCount; ++next)
             menu->items[next - 1] = menu->items[next];
@@ -942,6 +946,11 @@ void ui_compat_remove_single_player_menu_item(void)
         menu->items[menu->itemCount] = NULL;
         removed = qtrue;
         break;
+#else
+        item->action = String_Alloc(
+            "play \"mouse_click\"; exec \"coduosplaunch\"; ");
+        return;
+#endif
     }
 
     if (removed == qfalse)

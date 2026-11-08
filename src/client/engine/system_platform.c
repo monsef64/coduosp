@@ -3,6 +3,7 @@
 #include "client/common/client_legacy_crt.h"
 #include "client/cgame.h"
 #include "filesystem/filesystem.h"
+#include "qcommon/coduo_product_flavor.h"
 #include "qcommon/game_module_abi_types.h"
 #include "networking/net_address.h"
 #include "platform/dynamic_library_boundary.h"
@@ -1134,7 +1135,7 @@ void *Sys_LoadDll(const char *moduleName, char *loadedPath,
      * bytes.
      */
     Com_sprintf(pureIdentityName, sizeof(pureIdentityName),
-                "uo_%s_mp_x86.dll", moduleName);
+               CODUO_PRODUCT_MODULE_IDENTITY_FORMAT, moduleName);
 #if defined(_WIN32)
     Q_strncpyz(dllName, pureIdentityName, sizeof(dllName));
 #elif defined(__APPLE__) && defined(__aarch64__)
@@ -1143,22 +1144,22 @@ void *Sys_LoadDll(const char *moduleName, char *loadedPath,
      * Apple Silicon ABI. The module entry-point contract remains dllEntry /
      * vmMain; only the platform loader artifact name differs.
      */
-    Com_sprintf(
-        dllName, sizeof(dllName), "uo_%s_mp_arm64.dylib", moduleName);
+    Com_sprintf(dllName, sizeof(dllName),
+                CODUO_PRODUCT_MODULE_NATIVE_ARM64_FORMAT, moduleName);
 #elif defined(__linux__) && defined(__i386__)
     /*
      * NOT_FROM_ORIGINAL_SOURCE: native module filename for the reconstructed
      * Linux i386 ABI.
      */
-    Com_sprintf(
-        dllName, sizeof(dllName), "uo_%s_mp_x86.so", moduleName);
+    Com_sprintf(dllName, sizeof(dllName),
+                CODUO_PRODUCT_MODULE_NATIVE_X86_FORMAT, moduleName);
 #else
     /*
      * NOT_FROM_ORIGINAL_SOURCE: native Unix module filename. Architecture is
      * explicit so an incompatible module cannot be selected silently.
      */
-    Com_sprintf(
-        dllName, sizeof(dllName), "uo_%s_mp_x86_64.so", moduleName);
+    Com_sprintf(dllName, sizeof(dllName),
+                CODUO_PRODUCT_MODULE_NATIVE_X86_64_FORMAT, moduleName);
 #endif
 
     cvar = Cvar_FindVar("fs_basepath");

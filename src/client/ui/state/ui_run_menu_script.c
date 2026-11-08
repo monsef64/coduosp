@@ -6,6 +6,7 @@
 #include "../module/ui_globals.h"
 #include "client/common/client_format_validation.h"
 #include "client/common/client_legacy_crt.h"
+#include "qcommon/coduo_product_flavor.h"
 #include "compat/crt/qsort_compat.h"
 
 enum {
@@ -75,7 +76,8 @@ void UI_RunMenuScript(char **arguments)
     if (Q_stricmpn("resetDefaults", command,
                    UI_LEADING_SCRIPT_COMPARE_LIMIT) == 0) {
         trap_Cmd_ExecuteText(EXEC_NOW, "cvar_restart\n");
-        trap_Cmd_ExecuteText(EXEC_NOW, "exec default_mp.cfg\n");
+        trap_Cmd_ExecuteText(EXEC_NOW,
+                             "exec " CODUO_PRODUCT_DEFAULT_CONFIG_NAME "\n");
         trap_Cmd_ExecuteText(EXEC_NOW, "exec language.cfg\n");
         trap_Cmd_ExecuteText(EXEC_NOW, "setRecommended\n");
         ui_compat_controls_set_defaults();

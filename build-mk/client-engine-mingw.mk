@@ -25,6 +25,18 @@ MINGW64_DEP_PREFIX ?=
 MINGW32_DEP_CPPFLAGS ?=
 MINGW32_DEP_LDFLAGS ?=
 RECOVERY_POLICY_CPPFLAGS :=
+# NOT_FROM_ORIGINAL_SOURCE: CODUO_SP=1 selects the single-player product
+# flavor (see src/qcommon/coduo_product_flavor.h) for this client-engine
+# build.
+CODUO_SP ?= 0
+ifeq ($(filter $(CODUO_SP),0 1),)
+$(error CODUO_SP must be 1 or 0)
+endif
+ifeq ($(CODUO_SP),1)
+CODUO_SP_CPPFLAGS := -DCODUO_SP
+else
+CODUO_SP_CPPFLAGS :=
+endif
 CODUOMP_RENDERER_GPU_PROFILE ?= 0
 
 ifeq ($(filter $(CODUOMP_RENDERER_GPU_PROFILE),0 1),)
@@ -57,6 +69,7 @@ MINGW32_CPPFLAGS := -Isrc \
 	-DCURL_STATICLIB \
 	-DCASE_SENSITIVE_FS=0 \
 	$(RECOVERY_POLICY_CPPFLAGS) \
+	$(CODUO_SP_CPPFLAGS) \
 	$(CODUOMP_RENDERER_GPU_PROFILE_CPPFLAGS) \
 	$(if $(MINGW32_DEP_PREFIX),-I$(MINGW32_DEP_PREFIX)/include) \
 	$(if $(MINGW32_DEP_PREFIX),-I$(MINGW32_DEP_PREFIX)/include/SDL2) \

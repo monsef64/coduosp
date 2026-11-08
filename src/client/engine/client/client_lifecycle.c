@@ -9,6 +9,7 @@
 #include "../effects/fx_api.h"
 #include "../effects/fx_runtime.h"
 #include "qcommon/q_string.h"
+#include "qcommon/coduo_product_flavor.h"
 #include "filesystem/filesystem.h"
 #include "../filesystem/server_namespace.h"
 #include "../math/vector_math.h"
@@ -22,6 +23,7 @@
 #include "../sound/sound_system.h"
 #include "../system_event.h"
 #include "../system_platform.h"
+#include "../system_single_player_launcher.h"
 #include "../ui/ui_client_state.h"
 
 #include <stdarg.h>
@@ -338,7 +340,7 @@ static void coduomp_client_teardown_server_mod(void)
     FS_Restart(0);
     cl_connectedToPureServer = qfalse;
     coduomp_serverModTeardownRestartPending = qtrue;
-    Cbuf_InsertText("exec uoconfig_mp.cfg");
+    Cbuf_InsertText("exec " CODUO_PRODUCT_AUTO_CONFIG_NAME);
 }
 
 /* NOT_FROM_ORIGINAL_SOURCE: finish the deferred half of server-mod
@@ -1719,6 +1721,10 @@ void CL_Init(void)
     Cmd_AddCommand("demofastforward", coduomp_DemoFastForward_f);
     Cmd_AddCommand("cinematic", CL_PlayCinematic_f);
     Cmd_AddCommand("logo", CL_PlayLogo_f);
+    /* NOT_FROM_ORIGINAL_SOURCE: the retail main menu's Single Player entry
+     * launched the single-player executable; this command restores that
+     * launcher for the reconstructed CoDUOSP client. */
+    Cmd_AddCommand("coduosplaunch", coduosp_launch_single_player);
     Cmd_AddCommand("stoprecord", CL_StopRecord_f);
     Cmd_AddCommand("connect", CL_Connect_f);
     Cmd_AddCommand("reconnect", CL_Reconnect_f);

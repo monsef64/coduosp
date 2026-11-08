@@ -31,6 +31,10 @@
 #include "compat/libm/coduo_libm.h"
 #include "qcommon/com_sprintf.h"
 #include "qcommon/q_string.h"
+#include "qcommon/coduo_product_flavor.h"
+#if defined(CODUO_SP)
+#include "single_player_mode.h"
+#endif
 
 typedef struct script_entity_field_s script_entity_field_t;
 typedef void (*script_entity_field_setter_t)(gentity_t *ent,
@@ -231,7 +235,10 @@ typedef struct script_function_s {
 #define SCRIPT_CALLBACK_PLAYER_DISCONNECT "CodeCallback_PlayerDisconnect"
 #define SCRIPT_CALLBACK_PLAYER_DAMAGE "CodeCallback_PlayerDamage"
 #define SCRIPT_CALLBACK_PLAYER_KILLED "CodeCallback_PlayerKilled"
-#define LEVEL_SCRIPT_PATH "maps/mp/%s"
+/* NOT_FROM_ORIGINAL_SOURCE: the single-player flavor loads the campaign
+ * level script from maps/<name> with no gametype script layer; the
+ * multiplayer flavor keeps the recovered maps/mp/<name> spelling. */
+#define LEVEL_SCRIPT_PATH CODUO_PRODUCT_LEVEL_SCRIPT_PATH
 #define LEVEL_MAPNAME_CVAR "mapname"
 #define LEVEL_MAPNAME_CVAR_FLAGS \
     (CVAR_SERVERINFO | CVAR_ROM)
@@ -5085,6 +5092,12 @@ uint32_t Script_LoadFunctionHandle(const char *scriptName, const char *labelName
 /* VERIFIED_DECOMPILER(0x663c2, 763c2_GScr_LoadGameTypeScript.c, VERIFY-SCRIPT-BUILTINS-REGISTRY-LOAD-2026-06-17): DATAFLOW_VERIFIED; 64-byte path buffer, gametype format, callback setup script loads, required flags, and handle stores checked against current decompiler output. */
 void GScr_LoadGameTypeScript(void)
 {
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: the single-player game has no gametype or
+     * _callbacksetup scripts. The level script main is the entry point and
+     * the optional callback handles stay unloaded (zero). */
+    return;
+#else
     char scriptName[MAX_QPATH];
 
     Com_sprintf(scriptName, sizeof(scriptName), GAMETYPE_SCRIPT_PATH,
@@ -5106,6 +5119,7 @@ void GScr_LoadGameTypeScript(void)
     g_scr_data.playerKilled =
         Script_LoadFunctionHandle(GAMETYPE_CALLBACK_SETUP_SCRIPT,
                                   SCRIPT_CALLBACK_PLAYER_KILLED, qtrue);
+#endif
 }
 
 /* VERIFIED_DECOMPILER(0x664f9, 764f9_FUN_000764f9.c, VERIFY-SCRIPT-BUILTINS-REGISTRY-LOAD-2026-06-17): DATAFLOW_VERIFIED; mapname cvar registration, 64-byte level script path format, optional main-label load, and handle store checked against current decompiler output. */
@@ -5175,9 +5189,15 @@ void GScr_FreeScripts(void)
 /* VERIFIED_DECOMPILER(0x6ede3, 7ede3_Scr_LoadGameType.c, VERIFY-SCRIPT-BUILTINS-REGISTRY-LOAD-2026-06-17): DATAFLOW_VERIFIED; gametype main handle execution, zero parameter count, thread-id capture, and free checked against current decompiler output. */
 void Scr_LoadGameType(void)
 {
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: there is no gametype script main in the
+     * single-player game; the level script main runs through Scr_LoadLevel. */
+    return;
+#else
     uint16_t threadId = Scr_ExecThread(g_scr_data.gametypeScriptMain, 0);
 
     Scr_FreeThread(threadId);
+#endif
 }
 
 /* VERIFIED_DECOMPILER(0x662f3, 762f3_Scr_LoadLevel.c, VERIFY-SCRIPT-BUILTINS-REGISTRY-LOAD-2026-06-17): DATAFLOW_VERIFIED; nonzero level-handle guard, zero-parameter execution, thread-id capture, and free checked against current decompiler output. */
@@ -5193,15 +5213,28 @@ void Scr_LoadLevel(void)
 /* VERIFIED_DECOMPILER(0x6ee24, 7ee24_Scr_StartupGameType.c, VERIFY-SCRIPT-BUILTINS-REGISTRY-LOAD-2026-06-17): DATAFLOW_VERIFIED; start callback handle execution, zero parameter count, thread-id capture, and free checked against current decompiler output. */
 void Scr_StartupGameType(void)
 {
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: the unloaded single-player gametype start
+     * callback has no thread to run. */
+    return;
+#else
     uint16_t threadId = Scr_ExecThread(g_scr_data.gametypeStart, 0);
 
     Scr_FreeThread(threadId);
+#endif
 }
 
 /* NOT_FROM_ORIGINAL_SOURCE: local helper extracted from recovered script builtin behavior (game_compat_script_exec_entity_thread). */
 static void game_compat_script_exec_entity_thread(gentity_t *ent, uint32_t handle,
                                       int paramCount)
 {
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: the single-player callbacks are optional;
+     * an unloaded handle has no thread to run. */
+    if (handle == 0) {
+        return;
+    }
+#endif
     uint16_t threadId = Scr_ExecEntThread(ent, handle, paramCount);
 
     Scr_FreeThread(threadId);
@@ -5227,6 +5260,13 @@ void Scr_PlayerDamage(gentity_t *target, gentity_t *inflictor,
 {
     const weaponInfo_t *weaponInfo;
 
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: skip the unloaded single-player callback
+     * before any argument is pushed onto the script stack. */
+    if (g_scr_data.playerDamage == 0) {
+        return;
+    }
+#endif
     Scr_AddConstString(G_GetHitLocationString(hitLocation));
     GScr_AddVector(dir);
     GScr_AddVector(point);
@@ -5247,6 +5287,15 @@ void Scr_PlayerKilled(gentity_t *self, gentity_t *inflictor,
 {
     const weaponInfo_t *weaponInfo;
 
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: without the multiplayer killed callback the
+     * code-side single-player respawn timer owns the death handling; skip
+     * the unloaded callback before any argument is pushed. */
+    if (g_scr_data.playerKilled == 0) {
+        coduosp_client_died(self);
+        return;
+    }
+#endif
     Scr_AddConstString(G_GetHitLocationString(hitLocation));
     GScr_AddVector(dir);
     weaponInfo = (const weaponInfo_t *)BG_GetInfoForWeapon(weapon);
