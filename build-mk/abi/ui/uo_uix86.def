@@ -1,0 +1,4 @@
+LIBRARY uo_uix86
+EXPORTS
+    dllEntry @1
+    vmMain @2

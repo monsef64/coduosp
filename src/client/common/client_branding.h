@@ -4,7 +4,11 @@
 /* INTENTIONAL_OVERRIDE: the improved client uses its own local display
  * identity; the stock source retains the retail labels. These constants are
  * not used for network protocol, server info, or updater requests. */
+#if defined(CODUO_SP)
+#define CODUOMP_DISPLAY_PRODUCT "Open CoD:UO Single Player"
+#else
 #define CODUOMP_DISPLAY_PRODUCT "Open CoD:UO"
+#endif
 #define CODUOMP_DISPLAY_VERSION "1.51"
 #define CODUOMP_DISPLAY_BUILD_DATE __DATE__
 #define CODUOMP_DISPLAY_BUILD_TIME __TIME__

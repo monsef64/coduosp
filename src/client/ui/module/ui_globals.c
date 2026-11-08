@@ -1,5 +1,6 @@
 #include "ui_globals.h"
 #include "math/q_math.h"
+#include "qcommon/coduo_product_flavor.h"
 
 #include <string.h>
 
@@ -484,7 +485,8 @@ cvarTable_t ui_cvarTable[UI_MAX_CVARS] = {
     UI_CVAR_ENTRY(33, "ui_cdkeychecked", "0", CVAR_ROM),
     UI_CVAR_ENTRY(34, "cg_selectedPlayer", "0", CVAR_ARCHIVE),
     UI_CVAR_ENTRY(35, "ui_netSource", "0", CVAR_ARCHIVE),
-    UI_CVAR_ENTRY(36, "ui_menuFiles", "ui_mp/menus.txt", CVAR_NONE),
+    UI_CVAR_ENTRY(36, "ui_menuFiles", CODUO_PRODUCT_UI_MENU_ROOT "/menus.txt",
+                  CVAR_NONE),
     UI_CVAR_ENTRY(37, "ui_gametype", "3", CVAR_ARCHIVE),
     UI_CVAR_ENTRY(38, "ui_joinGametype", "0", CVAR_ARCHIVE),
     UI_CVAR_ENTRY(39, "ui_netGametype", "0", CVAR_ARCHIVE),

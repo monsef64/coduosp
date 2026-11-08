@@ -1,0 +1,102 @@
+name: Linux
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  policy:
+    name: Source policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install policy tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3
+          python3 -m pip install cpplint
+      - name: Policy check
+        run: make policy-check
+
+  linux64:
+    name: Linux x86_64 client and server
+    runs-on: ubuntu-latest
+    needs: policy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential pkg-config \
+            libsdl2-dev libjpeg-dev libcurl4-openssl-dev libminizip-dev \
+            zlib1g-dev libgl1-mesa-dev libopenal-dev libsndfile1-dev
+      - name: Build multiplayer client package
+        run: make client-linux64-package
+      - name: Build single-player client package
+        run: make client-linux64-sp-package
+      - name: Build dedicated server
+        run: make server64
+      - name: Upload multiplayer client package
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencoduo-linux-x86_64
+          path: .workbench/build/linux/opencoduo-linux-x86_64-*.tar.gz
+          if-no-files-found: error
+      - name: Upload single-player client package
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencoduo-sp-linux-x86_64
+          path: .workbench/build/linux/opencoduo-sp-linux-x86_64-*.tar.gz
+          if-no-files-found: error
+      - name: Upload dedicated server
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencoduo-server-linux-x86_64
+          path: |
+            .workbench/build/server/**/CoDUOMPDed*
+            .workbench/build/server/**/uo_game*.so
+          if-no-files-found: error
+
+  linux32:
+    name: Linux i686 client and server
+    runs-on: ubuntu-latest
+    needs: policy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies (i386)
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential pkg-config gcc-multilib g++-multilib \
+            libsdl2-dev:i386 libjpeg-dev:i386 libcurl4-openssl-dev:i386 \
+            libminizip-dev:i386 zlib1g-dev:i386 libgl1-mesa-dev:i386 \
+            libopenal-dev:i386 libsndfile1-dev:i386
+      - name: Build multiplayer client package
+        run: make client-linux32-package
+      - name: Build single-player client package
+        run: make client-linux32-sp-package
+      - name: Build dedicated server
+        run: make server32
+      - name: Upload multiplayer client package
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencoduo-linux-i686
+          path: .workbench/build/linux/opencoduo-linux-i686-*.tar.gz
+          if-no-files-found: error
+      - name: Upload single-player client package
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencoduo-sp-linux-i686
+          path: .workbench/build/linux/opencoduo-sp-linux-i686-*.tar.gz
+          if-no-files-found: error
+      - name: Upload dedicated server
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencoduo-server-linux-i686
+          path: |
+            .workbench/build/server/**/CoDUOMPDed*
+            .workbench/build/server/**/uo_game*.so
+          if-no-files-found: error

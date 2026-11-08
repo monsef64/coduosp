@@ -18,6 +18,9 @@
 #include "level_locals.h"
 #include "bg_state.h"
 #include "compat/crt/qsort_compat.h"
+#if defined(CODUO_SP)
+#include "single_player_mode.h"
+#endif
 
 #define FRAME_MAX_CLIENTS 64
 #define GENTITY_FLAG_SKIP_XANIM_UPDATE 0x4000u
@@ -396,6 +399,13 @@ void G_RunFrame(int levelTimeIn)
     lvl->frameTime = bg.frameTime;             /* level.frameTime */
 
     G_UpdateCvars();
+
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: without gametype scripts to respawn the
+     * local player, the code-side respawn timer runs first in the frame so
+     * the respawned client gets a full end-frame below. */
+    coduosp_run_frame();
+#endif
 
     /* ---- Entity notify-watch loop ---- */
     memset(notified, 0, sizeof(notified));

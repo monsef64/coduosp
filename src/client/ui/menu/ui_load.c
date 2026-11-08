@@ -1,5 +1,6 @@
 #include "../module/ui_functions.h"
 #include "client/common/client_legacy_crt.h"
+#include "qcommon/coduo_product_flavor.h"
 
 enum {
     UI_SAVED_MENU_NAME_SIZE = 1024,
@@ -22,7 +23,7 @@ void UI_Load(void)
         reopenFocusedMenu = qtrue;
     }
     if (*menuFile == '\0') {
-        menuFile = "ui_mp/menus.txt";
+        menuFile = CODUO_PRODUCT_UI_MENU_ROOT "/menus.txt";
     }
 
     String_Init();

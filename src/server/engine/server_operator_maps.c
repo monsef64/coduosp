@@ -1,6 +1,7 @@
 #include "compat/coduo_compiler.h"
 #include "server_operator_maps.h"
 
+#include "qcommon/coduo_product_flavor.h"
 #include "qcommon/com_parse.h"
 #include "filesystem/filesystem.h"
 #include "qcommon/game_module_abi_types.h"
@@ -96,7 +97,8 @@ qboolean SV_MapExists(const char *mapName)
     if (cleanMapName == NULL) {
         return qfalse;
     }
-    const char *const bspPath = va("maps/mp/%s.bsp", cleanMapName);
+    const char *const bspPath =
+        va(CODUO_PRODUCT_MAP_BSP_PATH_FORMAT, cleanMapName);
 
     return FS_ReadFile(bspPath, NULL) >= 0 ? qtrue : qfalse;
 }
@@ -123,7 +125,8 @@ void SV_Map_f(void)
     if (cleanMapName == NULL) {
         return;
     }
-    const char *const bspPath = va("maps/mp/%s.bsp", cleanMapName);
+    const char *const bspPath =
+        va(CODUO_PRODUCT_MAP_BSP_PATH_FORMAT, cleanMapName);
     if (FS_ReadFile(bspPath, NULL) == -1) {
         Com_Printf("Can't find map %s\n", bspPath);
         return;

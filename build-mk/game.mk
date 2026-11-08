@@ -164,6 +164,12 @@ WINDOWS_I686_DEPS := $(WINDOWS_I686_OBJS:.o=.d)
 CPPFLAGS += -iquote $(GAME_DIR)/bindings \
 	-iquote src/qcommon/bindings/default \
 	-Isrc
+
+# NOT_FROM_ORIGINAL_SOURCE: CODUO_SP=1 selects the single-player product
+# flavor (see src/qcommon/coduo_product_flavor.h) for this game-module build.
+ifeq ($(CODUO_SP),1)
+CPPFLAGS += -DCODUO_SP
+endif
 # Stock i386 uses signed plain char, 32-bit enum-backed domains, and wrapping
 # ADD/SUB/IMUL semantics. GCC, Clang, and MinGW support explicit switches for
 # those rules, preventing host defaults or inherited flags from changing them.

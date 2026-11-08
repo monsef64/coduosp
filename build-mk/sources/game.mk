@@ -1,5 +1,14 @@
 include build-mk/sources/common.mk
 
+# NOT_FROM_ORIGINAL_SOURCE: the single-player game module build adds the
+# code-side single-player support (spawn placement and respawn) and compiles
+# every shared source with the CODUO_SP product flavor.
+ifeq ($(CODUO_SP),1)
+GAME_SINGLE_PLAYER_C_SOURCES := src/server/game/single_player_mode.c
+else
+GAME_SINGLE_PLAYER_C_SOURCES :=
+endif
+
 GAME_C_SOURCES := \
 	src/server/game/animation.c \
 	src/server/game/bg_player_state.c \
@@ -36,4 +45,5 @@ GAME_C_SOURCES := \
 	src/server/game/spatial_methods.c \
 	src/server/game/syscall_veneers.c \
 	src/server/game/trigger_damage.c \
-	src/server/game/vehicle.c
+	src/server/game/vehicle.c \
+	$(GAME_SINGLE_PLAYER_C_SOURCES)

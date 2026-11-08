@@ -1,6 +1,7 @@
 #include "globals.h"
 #include "client_recovered.h"
 #include "compat/crt/random_compat.h"
+#include "qcommon/coduo_product_flavor.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -949,7 +950,10 @@ const char cg_couldNotLoadScriptMenuFmt[38] = "Could not load script menu file '
 /* Source: uo_cgame_mp_x86.dll 0x3007a368 (.rdata); refs=1 width=imm; first=0x30038408; owner=pm_weapon_addfiringaimspreadscale.
  * Example: 30038408   68 68 a3 07 30               PUSH 0x3007a368
  */
-const char mpMapBspPathFormat[15] = "maps/mp/%s.bsp";
+/* NOT_FROM_ORIGINAL_SOURCE: the single-player build resolves the map bsp
+ * under maps/ (campaign layout) instead of the recovered maps/mp/ spelling;
+ * the array size stays [15] so shared consumers keep the same object. */
+const char mpMapBspPathFormat[15] = CODUO_PRODUCT_MAP_BSP_PATH_FORMAT;
 /* Source: uo_cgame_mp_x86.dll 0x3007a378 (.rdata); refs=1 width=imm; first=0x300383e4; owner=pm_weapon_addfiringaimspreadscale.
  * Example: 300383e4   bb 78 a3 07 30               MOV EBX,0x3007a378
  */

@@ -1,5 +1,6 @@
 #include "system_process_lock.h"
 
+#include "qcommon/coduo_product_flavor.h"
 #include "system_localization.h"
 #include "qcommon/com_sprintf.h"
 
@@ -381,7 +382,7 @@ qboolean coduomp_sys_check_improper_quit_config(void)
 
     void *fileBuffer = NULL;
     const int32_t fileLength =
-        FS_ReadFile("uoconfig_mp.cfg", &fileBuffer);
+        FS_ReadFile(CODUO_PRODUCT_AUTO_CONFIG_NAME, &fileBuffer);
     if (fileLength < 0 || fileBuffer == NULL)
         return qfalse;
 
@@ -398,7 +399,8 @@ qboolean coduomp_sys_check_improper_quit_config(void)
             fileBuffer, (size_t)fileLength);
     FS_FreeFile(fileBuffer);
     Com_Printf(
-        "uoconfig_mp.cfg is structurally invalid at line %i: %s\n",
+        CODUO_PRODUCT_AUTO_CONFIG_NAME
+        " is structurally invalid at line %i: %s\n",
         error.line, error.reason);
 
     const char *const title =

@@ -6,6 +6,7 @@
 #include "../animation/xanim_pool.h"
 #include "../localization/string_ed_api.h"
 #include "../q_shared.h"
+#include "qcommon/coduo_product_flavor.h"
 #include "qcommon/q_string.h"
 #include "../physics/cm_trace.h"
 #include "../renderer/renderer_api.h"
@@ -286,7 +287,7 @@ void CL_InitCGame(void)
         &cl.gameState.stringData[cl.gameState.stringOffsets[CS_SERVERINFO]];
     const char *mapName = Info_ValueForKey(serverInfo, "mapname");
     Com_sprintf(cl.mapBspName, sizeof(cl.mapBspName),
-                "maps/mp/%s.bsp", mapName);
+                CODUO_PRODUCT_MAP_BSP_PATH_FORMAT, mapName);
 
     coduo_cgameVm = VM_Create("cgame", CL_CgameSystemCalls);
     if (coduo_cgameVm == NULL) {

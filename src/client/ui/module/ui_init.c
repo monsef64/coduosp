@@ -3,6 +3,7 @@
 #include "ui_functions.h"
 #include "ui_globals.h"
 #include "compat/crt/qsort_compat.h"
+#include "qcommon/coduo_product_flavor.h"
 
 enum {
     UI_NO_CINEMATIC = -1
@@ -126,16 +127,17 @@ void UI_Init(void)
                                    sizeof(ui_menuFilesBuffer));
     menuFiles = ui_menuFilesBuffer[0] != '\0'
                     ? ui_menuFilesBuffer
-                    : "ui_mp/menus.txt";
+                    : CODUO_PRODUCT_UI_MENU_ROOT "/menus.txt";
     UI_LoadMenus(menuFiles, qtrue, R_IMAGE_TRACK_UI);
-    UI_LoadMenus("ui_mp/ingame.txt", qfalse, R_IMAGE_TRACK_UI);
+    UI_LoadMenus(CODUO_PRODUCT_UI_MENU_ROOT "/ingame.txt", qfalse,
+                 R_IMAGE_TRACK_UI);
     trap_Cvar_Set(UI_COMPAT_CONSOLE_BIND_CAPTURE_CVAR, "0");
     ui_compat_extend_graphics_menu();
     ui_compat_extend_sound_menu();
     ui_compat_extend_misc_binding_menu();
     ui_compat_extend_advanced_menu();
     ui_compat_brand_main_menu_version();
-    ui_compat_remove_single_player_menu_item();
+    ui_compat_wire_single_player_menu_item();
     for (index = 0; index < menuCount; ++index) {
         Menus_Close(&Menus[index]);
     }

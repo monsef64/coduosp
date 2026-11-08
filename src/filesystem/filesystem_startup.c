@@ -1,6 +1,7 @@
 #include "filesystem.h"
 #include "filesystem_services.h"
 
+#include "qcommon/coduo_product_flavor.h"
 #include "qcommon/com_startup_commands.h"
 #include "qcommon/com_sprintf.h"
 #include "qcommon/q_command.h"
@@ -182,12 +183,12 @@ void FS_InitFilesystem(void)
     filesystem_compat_update_language_info();
     FS_CheckRestrictedDemoPaks();
 
-    if (FS_ReadFile("default_mp.cfg", NULL) <= 0) {
+    if (FS_ReadFile(CODUO_PRODUCT_DEFAULT_CONFIG_NAME, NULL) <= 0) {
         Com_Error(
             ERR_FATAL,
             "Couldn't load %s.  Make sure Call of Duty is run from the "
             "correct folder.",
-            "default_mp.cfg");
+            CODUO_PRODUCT_DEFAULT_CONFIG_NAME);
     }
 
     Q_strncpyz(fs_savedBasePath, fs_basepath->string,
@@ -233,7 +234,7 @@ static void coduomp_FS_RestartInternal(int32_t checksumFeed,
     filesystem_compat_update_language_info();
     FS_CheckRestrictedDemoPaks();
 
-    if (FS_ReadFile("default_mp.cfg", NULL) <= 0) {
+    if (FS_ReadFile(CODUO_PRODUCT_DEFAULT_CONFIG_NAME, NULL) <= 0) {
         if (fs_savedBasePath[0] != '\0') {
             FS_PureServerSetLoadedPaks("", "");
             (void)Cvar_Set2(
@@ -251,12 +252,12 @@ static void coduomp_FS_RestartInternal(int32_t checksumFeed,
             ERR_FATAL,
             "Couldn't load %s.  Make sure Call of Duty is run from the "
             "correct folder.",
-            "default_mp.cfg");
+            CODUO_PRODUCT_DEFAULT_CONFIG_NAME);
     }
 
     if (Q_stricmp(fs_game->string, fs_savedGame) != 0 &&
         Com_SafeMode() == qfalse) {
-        Cbuf_AddText(va("exec %s\n", "uoconfig_mp.cfg"));
+        Cbuf_AddText(va("exec %s\n", CODUO_PRODUCT_AUTO_CONFIG_NAME));
         filesystem_compat_queue_saved_aspect_mode(savedAspectMode);
     }
 

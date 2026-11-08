@@ -187,12 +187,14 @@ CLIENT_ENGINE_C_SOURCES := \
 	src/client/engine/ui/ui_syscalls.c
 
 # NOT_FROM_ORIGINAL_SOURCE: the improved source line owns the compatibility
-# providers for filesystem and renderer policy.
+# providers for filesystem and renderer policy, and the sibling
+# single-player-client launcher.
 CLIENT_ENGINE_C_SOURCES += \
 	src/client/engine/filesystem/server_namespace_provider.c \
 	src/client/engine/renderer/output_gamma_compat.c \
 	src/client/engine/renderer/platform_gamma.c \
-	src/client/engine/renderer/renderer_color_mappings.c
+	src/client/engine/renderer/renderer_color_mappings.c \
+	src/client/engine/system_single_player_launcher.c
 
 CLIENT_ENGINE_CXX_SOURCES := \
 	src/client/engine/effects/fx_add.cpp \

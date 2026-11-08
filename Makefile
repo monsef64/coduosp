@@ -90,11 +90,35 @@ LINUX64_GAME_OUTPUT ?= $(BUILD_DIR)/game/client-linux-x86_64/uo_game_mp_x86_64.s
 LINUX32_PACKAGE_OUTPUT ?= $(BUILD_DIR)/linux/opencoduo-linux-i686-$(shell printf '%s' "$(SOURCE_COMMIT)" | cut -c1-9).tar.gz
 LINUX64_PACKAGE_OUTPUT ?= $(BUILD_DIR)/linux/opencoduo-linux-x86_64-$(shell printf '%s' "$(SOURCE_COMMIT)" | cut -c1-9).tar.gz
 
+# Single-player product (CoDUOSP): engine, module, and package outputs follow
+# the retail single-player names (uo_gamex86.dll-style stems). The SP engine
+# build keeps its own object directory so MP and SP builds never share
+# compiled objects.
+CLIENT_SP_NATIVE_DIR ?= $(BUILD_DIR)/client-sp/native
+CLIENT_SP_ENGINE_OUTPUT := $(CLIENT_SP_NATIVE_DIR)/CoDUOSP
+CLIENT_SP_BASEGAME_DIR := $(CLIENT_SP_NATIVE_DIR)/uo
+CLIENT_SP_CGAME_OUTPUT := $(CLIENT_SP_BASEGAME_DIR)/uo_cgame$(CLIENT_NATIVE_ARCH).$(CLIENT_NATIVE_EXT)
+CLIENT_SP_UI_OUTPUT := $(CLIENT_SP_BASEGAME_DIR)/uo_ui$(CLIENT_NATIVE_ARCH).$(CLIENT_NATIVE_EXT)
+CLIENT_SP_GAME_BUILD_DIR ?= $(BUILD_DIR)/game/client-native-sp
+CLIENT_SP_GAME_OUTPUT := $(CLIENT_SP_BASEGAME_DIR)/uo_game$(CLIENT_NATIVE_ARCH).$(CLIENT_NATIVE_EXT)
+LINUX32_CLIENT_SP_DIR ?= $(BUILD_DIR)/client/linux-i686-sp
+LINUX64_CLIENT_SP_DIR ?= $(BUILD_DIR)/client/linux-x86_64-sp
+LINUX32_SP_GAME_OUTPUT ?= $(BUILD_DIR)/game/client-linux-i386-sp/uo_gamex86.so
+LINUX64_SP_GAME_OUTPUT ?= $(BUILD_DIR)/game/linux-x86_64-sp/uo_gamex86_64.so
+LINUX32_SP_PACKAGE_OUTPUT ?= $(BUILD_DIR)/linux/opencoduo-sp-linux-i686-$(shell printf '%s' "$(SOURCE_COMMIT)" | cut -c1-9).tar.gz
+LINUX64_SP_PACKAGE_OUTPUT ?= $(BUILD_DIR)/linux/opencoduo-sp-linux-x86_64-$(shell printf '%s' "$(SOURCE_COMMIT)" | cut -c1-9).tar.gz
+WINDOWS_SP_GAME_OUTPUT ?= $(BUILD_DIR)/game/client-windows-i686-sp/uo_gamex86.dll
+WINDOWS64_SP_GAME_OUTPUT ?= $(BUILD_DIR)/game/client-windows-x86_64-sp/uo_gamex86.dll
+
 .PHONY: all policy-check client client-engine client-cgame client-ui client-game client-run client-test-run \
 	client-linux32 client-linux64 client-windows client-windows-i686 \
 	client-windows-x86_64 client-linux32-package client-linux64-package \
 	client-windows-package client-windows-i686-package \
 	client-windows-x86_64-package \
+	client-sp client-sp-engine client-sp-cgame client-sp-ui client-sp-game \
+	client-linux32-sp client-linux64-sp client-windows-sp-i686 \
+	client-windows-sp-x86_64 client-linux32-sp-package \
+	client-linux64-sp-package \
 	server server64 server32 server-engine64 server-engine32 \
 	server-game64 server-game32 server-windows server-windows-i386 \
 	server-windows-i686 server-windows-x86_64 check-linux-host check-macos-host \
@@ -107,6 +131,9 @@ policy-check:
 
 ifeq ($(HOST_OS),Darwin)
 CLIENT_PLATFORM_TARGETS := client-game
+CLIENT_SP_PLATFORM_TARGETS := client-sp-game
+else
+CLIENT_SP_PLATFORM_TARGETS :=
 endif
 
 client: client-engine client-cgame client-ui $(CLIENT_PLATFORM_TARGETS)
@@ -329,6 +356,138 @@ client-windows-x86_64-package: client-windows-x86_64
 		"$(abspath $(WINDOWS64_PACKAGE_OUTPUT))" \
 		x86_64 "$(SOURCE_COMMIT)"
 
+# ---------------------------------------------------------------------
+# Single-player product (CoDUOSP) build targets. Every engine, module, and
+# package output follows the retail single-player naming; shared sources are
+# compiled with the CODUO_SP product flavor.
+# ---------------------------------------------------------------------
+
+client-sp: client-sp-engine client-sp-cgame client-sp-ui $(CLIENT_SP_PLATFORM_TARGETS)
+
+client-sp-engine:
+	$(MAKE) $(MAKE_JOBS) -f build-mk/client-targets.mk \
+		CC="$(CC)" CXX="$(CXX)" PKG_CONFIG="$(PKG_CONFIG)" \
+		CODUO_SP=1 \
+		CODUOMP_NATIVE_BUILD_DIR="$(abspath $(CLIENT_SP_NATIVE_DIR))" \
+		CODUOMP_NATIVE_EXECUTABLE="$(abspath $(CLIENT_SP_ENGINE_OUTPUT))" \
+		coduomp-native-link
+
+client-sp-cgame:
+	$(MAKE) $(MAKE_JOBS) -f build-mk/client-targets.mk \
+		CC="$(CC)" CODUO_SP=1 \
+		CLIENT_NATIVE_LIBRARY="$(abspath $(CLIENT_SP_CGAME_OUTPUT))" \
+		client-native-link
+
+client-sp-ui:
+	$(MAKE) $(MAKE_JOBS) -f build-mk/ui.mk \
+		CC="$(CC)" CODUO_SP=1 \
+		NATIVE_LIBRARY="$(abspath $(CLIENT_SP_UI_OUTPUT))" \
+		native-link
+
+client-sp-game: check-macos-host
+	$(MAKE) $(MAKE_JOBS) -f build-mk/game.mk \
+		CC="$(CC)" CODUO_SP=1 CODUO_FP_FAITHFUL=relaxed \
+		NATIVE64_SHARED_BUILD_DIR="$(abspath $(CLIENT_SP_GAME_BUILD_DIR))" \
+		NATIVE64_SHARED_TARGET="$(abspath $(CLIENT_SP_GAME_OUTPUT))" \
+		native64-shared
+
+client-linux32-sp:
+	@if test "$(HOST_OS)" != Linux; then \
+		echo 'error: client-linux32-sp must be built on Linux' >&2; \
+		exit 2; \
+	fi
+	$(MAKE) $(MAKE_JOBS) client-sp BUILD_DIR="$(BUILD_DIR)" \
+		CLIENT_SP_NATIVE_DIR="$(LINUX32_CLIENT_SP_DIR)" \
+		CLIENT_NATIVE_ARCH=x86 CLIENT_NATIVE_EXT=so \
+		CC="$(LINUX32_CC) -m32 -msse" \
+		CXX="$(LINUX32_CXX) -m32 -msse" \
+		PKG_CONFIG="$(LINUX32_PKG_CONFIG)"
+	$(MAKE) $(MAKE_JOBS) -f build-mk/game.mk \
+		CC="$(LINUX32_CC)" CODUO_SP=1 \
+		I386_SHARED_BUILD_DIR="$(abspath $(dir $(LINUX32_SP_GAME_OUTPUT)))" \
+		I386_SHARED_TARGET="$(abspath $(LINUX32_SP_GAME_OUTPUT))" shared-i386
+
+client-linux64-sp:
+	@if test "$(HOST_OS)" != Linux; then \
+		echo 'error: client-linux64-sp must be built on Linux' >&2; \
+		exit 2; \
+	fi
+	$(MAKE) $(MAKE_JOBS) client-sp BUILD_DIR="$(BUILD_DIR)" \
+		CLIENT_SP_NATIVE_DIR="$(LINUX64_CLIENT_SP_DIR)" \
+		CLIENT_NATIVE_ARCH=x86_64 CLIENT_NATIVE_EXT=so \
+		CC="$(LINUX64_CC) -m64" CXX="$(LINUX64_CXX) -m64" \
+		PKG_CONFIG="$(LINUX64_PKG_CONFIG)"
+	$(MAKE) $(MAKE_JOBS) -f build-mk/game.mk \
+		CC="$(LINUX64_CC)" CODUO_SP=1 \
+		NATIVE64_SHARED_BUILD_DIR="$(abspath $(dir $(LINUX64_SP_GAME_OUTPUT)))" \
+		NATIVE64_SHARED_TARGET="$(abspath $(LINUX64_SP_GAME_OUTPUT))" native64-shared
+
+client-linux32-sp-package: client-linux32-sp
+	tools/linux/package-client-sp.sh \
+		"$(abspath $(LINUX32_CLIENT_SP_DIR)/CoDUOSP)" \
+		"$(abspath $(LINUX32_CLIENT_SP_DIR)/uo/uo_cgamex86.so)" \
+		"$(abspath $(LINUX32_CLIENT_SP_DIR)/uo/uo_uix86.so)" \
+		"$(abspath $(LINUX32_SP_GAME_OUTPUT))" \
+		"$(abspath $(LINUX32_SP_PACKAGE_OUTPUT))" \
+		i686 x86 "$(SOURCE_COMMIT)"
+
+client-linux64-sp-package: client-linux64-sp
+	tools/linux/package-client-sp.sh \
+		"$(abspath $(LINUX64_CLIENT_SP_DIR)/CoDUOSP)" \
+		"$(abspath $(LINUX64_CLIENT_SP_DIR)/uo/uo_cgamex86_64.so)" \
+		"$(abspath $(LINUX64_CLIENT_SP_DIR)/uo/uo_uix86_64.so)" \
+		"$(abspath $(LINUX64_SP_GAME_OUTPUT))" \
+		"$(abspath $(LINUX64_SP_PACKAGE_OUTPUT))" \
+		x86_64 x86_64 "$(SOURCE_COMMIT)"
+
+client-windows-sp-i686:
+	$(MAKE) $(MAKE_JOBS) -f build-mk/client-engine-mingw.mk mingw32 \
+		CODUO_SP=1 \
+		MINGW32_CC="$(MINGW32_CC)" MINGW32_CXX="$(MINGW32_CXX)" \
+		MINGW32_BUILD_DIR="$(abspath $(BUILD_DIR)/client/windows-i686-sp)" \
+		MINGW32_OUTPUT="$(abspath $(BUILD_DIR)/client/windows-i686-sp/CoDUOSP.exe)" \
+		MINGW32_DEP_PREFIX="$(MINGW32_DEP_PREFIX)"
+	$(MAKE) $(MAKE_JOBS) -f build-mk/client-targets.mk client-win32-abi-link \
+		CODUO_SP=1 \
+		CLIENT_WIN32_CC="$(MINGW32_CC)" \
+		CLIENT_WINDOWS_DEF="build-mk/abi/cgame/uo_cgamex86.def" \
+		CLIENT_WIN32_LIBRARY="$(abspath $(BUILD_DIR)/client/windows-i686-sp/uo_cgamex86.dll)"
+	$(MAKE) $(MAKE_JOBS) -f build-mk/ui.mk win32-abi-link \
+		CODUO_SP=1 \
+		WIN32_CC="$(MINGW32_CC)" \
+		WINDOWS_DEF="build-mk/abi/ui/uo_uix86.def" \
+		WIN32_LIBRARY="$(abspath $(BUILD_DIR)/client/windows-i686-sp/uo_uix86.dll)"
+	$(MAKE) $(MAKE_JOBS) -f build-mk/game.mk windows-i686 \
+		CODUO_SP=1 \
+		MINGW32_CC="$(MINGW32_CC)" \
+		WINDOWS_MODULE_DEF="build-mk/abi/game/uo_gamex86.def" \
+		WINDOWS_I686_BUILD_DIR="$(abspath $(dir $(WINDOWS_SP_GAME_OUTPUT)))" \
+		WINDOWS_I686_TARGET="$(abspath $(WINDOWS_SP_GAME_OUTPUT))"
+
+client-windows-sp-x86_64:
+	$(MAKE) $(MAKE_JOBS) -f build-mk/client-engine-mingw.mk mingw64 \
+		CODUO_SP=1 \
+		MINGW64_CC="$(MINGW64_CC)" MINGW64_CXX="$(MINGW64_CXX)" \
+		MINGW64_BUILD_DIR="$(abspath $(BUILD_DIR)/client/windows-x86_64-sp)" \
+		MINGW64_OUTPUT="$(abspath $(BUILD_DIR)/client/windows-x86_64-sp/CoDUOSP.exe)" \
+		MINGW64_DEP_PREFIX="$(MINGW64_DEP_PREFIX)"
+	$(MAKE) $(MAKE_JOBS) -f build-mk/client-targets.mk client-windows-cross-link \
+		CODUO_SP=1 \
+		CLIENT_WINDOWS_CC="$(MINGW64_CC)" \
+		CLIENT_WINDOWS_DEF="build-mk/abi/cgame/uo_cgamex86.def" \
+		CLIENT_WINDOWS_LIBRARY="$(abspath $(BUILD_DIR)/client/windows-x86_64-sp/uo_cgamex86.dll)"
+	$(MAKE) $(MAKE_JOBS) -f build-mk/ui.mk windows-cross-link \
+		CODUO_SP=1 \
+		WINDOWS_CC="$(MINGW64_CC)" \
+		WINDOWS_DEF="build-mk/abi/ui/uo_uix86.def" \
+		WINDOWS_LIBRARY="$(abspath $(BUILD_DIR)/client/windows-x86_64-sp/uo_uix86.dll)"
+	$(MAKE) $(MAKE_JOBS) -f build-mk/game.mk windows-x86_64 \
+		CODUO_SP=1 \
+		MINGW64_CC="$(MINGW64_CC)" \
+		WINDOWS_MODULE_DEF="build-mk/abi/game/uo_gamex86.def" \
+		WINDOWS_X86_64_BUILD_DIR="$(abspath $(dir $(WINDOWS64_SP_GAME_OUTPUT)))" \
+		WINDOWS_X86_64_TARGET="$(abspath $(WINDOWS64_SP_GAME_OUTPUT))"
+
 server: server64
 
 server64: server-engine64 server-game64
@@ -412,6 +571,11 @@ help:
 	  '  client-linux32-package client-linux64-package client-windows-package' \
 	  '  client-windows-i686-package client-windows-x86_64-package' \
 	  '  client-engine client-cgame client-ui client-game' \
+	  'Single-player client (CoDUOSP) targets:' \
+	  '  client-sp client-sp-engine client-sp-cgame client-sp-ui client-sp-game' \
+	  '  client-linux32-sp client-linux64-sp client-windows-sp-i686' \
+	  '  client-windows-sp-x86_64 client-linux32-sp-package' \
+	  '  client-linux64-sp-package' \
 	  'macOS distribution targets:' \
 	  '  macos-app macos-package-check macos-zip' \
 	  'Server targets:' \

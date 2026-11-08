@@ -1,9 +1,12 @@
 #include "../module/ui_functions.h"
 #include "client/common/client_legacy_crt.h"
+#include "qcommon/coduo_product_flavor.h"
 
 #include <string.h>
 
-#define UI_SCRIPT_MENU_DIRECTORY "ui_mp/scriptmenus/"
+#define UI_SCRIPT_MENU_DIRECTORY \
+    CODUO_PRODUCT_UI_MENU_ROOT "/scriptmenus/"
+#define UI_SCRIPT_MENU_FALLBACK_DIRECTORY "ui_mp/scriptmenus/"
 #define UI_SCRIPT_MENU_EXTENSION ".menu"
 
 enum {
@@ -57,8 +60,34 @@ qboolean Load_ScriptMenu(const char *menuName, int32_t loadMode)
         }
     }
 
-    return UI_ParseMenu(menuPath, loadMode) != 0;
+    if (UI_ParseMenu(menuPath, loadMode) != 0) {
+        return qtrue;
+    }
+#if defined(CODUO_SP)
+    /* NOT_FROM_ORIGINAL_SOURCE: fall back to the multiplayer script-menu
+     * directory when the installed menu data does not provide the
+     * single-player one. The fallback directory is longer than the primary
+     * one, so the name bound is rechecked against its own path capacity. */
+    {
+        char fallbackPath[UI_SCRIPT_MENU_PATH_SIZE] =
+            UI_SCRIPT_MENU_FALLBACK_DIRECTORY;
+        const size_t fallbackLength =
+            strlen(menuName) + (sizeof(UI_SCRIPT_MENU_FALLBACK_DIRECTORY) -
+                                1u) +
+            (sizeof(UI_SCRIPT_MENU_EXTENSION) - 1u);
+
+        if (fallbackLength >= UI_SCRIPT_MENU_PATH_SIZE) {
+            return qfalse;
+        }
+        strcat(fallbackPath, menuName);
+        strcat(fallbackPath, UI_SCRIPT_MENU_EXTENSION);
+        return UI_ParseMenu(fallbackPath, loadMode) != 0;
+    }
+#else
+    return qfalse;
+#endif
 }
 
 #undef UI_SCRIPT_MENU_EXTENSION
+#undef UI_SCRIPT_MENU_FALLBACK_DIRECTORY
 #undef UI_SCRIPT_MENU_DIRECTORY

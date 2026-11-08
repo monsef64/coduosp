@@ -4,6 +4,7 @@
 #include "client/common/client_branding.h"
 #include "client/common/client_legacy_crt.h"
 #include "com_startup.h"
+#include "qcommon/coduo_product_flavor.h"
 
 #include "animation/xanim_pool.h"
 #include "client/cgame.h"
@@ -525,21 +526,23 @@ void Com_Init(char *commandLine)
 #if defined(_WIN32)
         (regenerateImproperQuitConfig == qfalse &&
          coduomp_config_sets_cvar(
-             "uoconfig_mp.cfg", "cl_allowDownload")) ||
+             CODUO_PRODUCT_AUTO_CONFIG_NAME, "cl_allowDownload")) ||
 #else
-        coduomp_config_sets_cvar("uoconfig_mp.cfg", "cl_allowDownload") ||
+        coduomp_config_sets_cvar(
+            CODUO_PRODUCT_AUTO_CONFIG_NAME, "cl_allowDownload") ||
 #endif
-        coduomp_config_sets_cvar("autoexec_mp.cfg", "cl_allowDownload");
+        coduomp_config_sets_cvar(
+            CODUO_PRODUCT_AUTOEXEC_CONFIG_NAME, "cl_allowDownload");
 
-    Cbuf_AddText("exec default_mp.cfg\n");
+    Cbuf_AddText("exec " CODUO_PRODUCT_DEFAULT_CONFIG_NAME "\n");
     Cbuf_AddText("exec language.cfg\n");
 #if defined(_WIN32)
     if (regenerateImproperQuitConfig == qfalse)
 #endif
-    Cbuf_AddText("exec uoconfig_mp.cfg\n");
-    Cbuf_AddText("exec autoexec_mp.cfg\n");
+    Cbuf_AddText("exec " CODUO_PRODUCT_AUTO_CONFIG_NAME "\n");
+    Cbuf_AddText("exec " CODUO_PRODUCT_AUTOEXEC_CONFIG_NAME "\n");
     if (Com_SafeMode() != qfalse) {
-        Cbuf_AddText("exec safemode_mp.cfg\n");
+        Cbuf_AddText("exec " CODUO_PRODUCT_SAFEMODE_CONFIG_NAME "\n");
         /* NOT_FROM_ORIGINAL_SOURCE: safe-mode retail settings also select
          * Miles; retain the executable's default in that reset path. */
         Cbuf_AddText("set mss_3d_provider \"" AUDIO_BACKEND_DEFAULT_NAME "\"\n");
